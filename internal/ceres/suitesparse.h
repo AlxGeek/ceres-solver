@@ -116,7 +116,7 @@ class SuiteSparse {
   // for symmetric scaling which scales both the rows and the columns
   // - diag(scale) * A * diag(scale).
   void Scale(cholmod_dense* scale, int mode, cholmod_sparse* A) {
-     cholmod_scale(scale, mode, A, &cc_);
+     cholmod_l_scale(scale, mode, A, &cc_);
   }
 
   // Create and return a matrix m = A * A'. Caller owns the
@@ -261,20 +261,20 @@ class SuiteSparse {
                                                    int* constraints,
                                                    int* ordering);
 
-  void Free(cholmod_sparse* m) { cholmod_free_sparse(&m, &cc_); }
-  void Free(cholmod_dense* m)  { cholmod_free_dense(&m, &cc_);  }
-  void Free(cholmod_factor* m) { cholmod_free_factor(&m, &cc_); }
+  void Free(cholmod_sparse* m) { cholmod_l_free_sparse(&m, &cc_); }
+  void Free(cholmod_dense* m)  { cholmod_l_free_dense(&m, &cc_);  }
+  void Free(cholmod_factor* m) { cholmod_l_free_factor(&m, &cc_); }
 
   void Print(cholmod_sparse* m, const std::string& name) {
-    cholmod_print_sparse(m, const_cast<char*>(name.c_str()), &cc_);
+    cholmod_l_print_sparse(m, const_cast<char*>(name.c_str()), &cc_);
   }
 
   void Print(cholmod_dense* m, const std::string& name) {
-    cholmod_print_dense(m, const_cast<char*>(name.c_str()), &cc_);
+    cholmod_l_print_dense(m, const_cast<char*>(name.c_str()), &cc_);
   }
 
   void Print(cholmod_triplet* m, const std::string& name) {
-    cholmod_print_triplet(m, const_cast<char*>(name.c_str()), &cc_);
+    cholmod_l_print_triplet(m, const_cast<char*>(name.c_str()), &cc_);
   }
 
   cholmod_common* mutable_cc() { return &cc_; }
