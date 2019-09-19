@@ -50,8 +50,8 @@ using std::vector;
 
 SuiteSparse::SuiteSparse() { 
   cholmod_l_start(&cc_);
-  cc_->useGPU = 1;
-  cc_->supernodal = CHOLMOD_SUPERNODAL; 
+  cc_.useGPU = 1;
+  cc_.supernodal = CHOLMOD_SUPERNODAL; 
 }
 
 SuiteSparse::~SuiteSparse() { cholmod_l_finish(&cc_); }
@@ -124,7 +124,7 @@ cholmod_sparse SuiteSparse::CreateSparseMatrixTransposeView(
   return m;
 }
 
-cholmod_dense SuiteSparse::CreateDenseVectorView(const double* x, int size) {
+cholmod_dense SuiteSparse::CreateDenseVectorView(const double* x, long int size) {
   cholmod_dense v;
   v.nrow = size;
   v.ncol = 1;
@@ -137,8 +137,8 @@ cholmod_dense SuiteSparse::CreateDenseVectorView(const double* x, int size) {
 }
 
 cholmod_dense* SuiteSparse::CreateDenseVector(const double* x,
-                                              int in_size,
-                                              int out_size) {
+                                              long int in_size,
+                                              long int out_size) {
   CHECK_LE(in_size, out_size);
   cholmod_dense* v = cholmod_l_zeros(out_size, 1, CHOLMOD_REAL, &cc_);
   if (x != nullptr) {
@@ -173,10 +173,10 @@ cholmod_factor* SuiteSparse::AnalyzeCholesky(cholmod_sparse* A,
 }
 
 cholmod_factor* SuiteSparse::BlockAnalyzeCholesky(cholmod_sparse* A,
-                                                  const vector<int>& row_blocks,
-                                                  const vector<int>& col_blocks,
+                                                  const vector<long int>& row_blocks,
+                                                  const vector<long int>& col_blocks,
                                                   string* message) {
-  vector<int> ordering;
+  vector<long int> ordering;
   if (!BlockAMDOrdering(A, row_blocks, col_blocks, &ordering)) {
     return nullptr;
   }
@@ -184,14 +184,14 @@ cholmod_factor* SuiteSparse::BlockAnalyzeCholesky(cholmod_sparse* A,
 }
 
 cholmod_factor* SuiteSparse::AnalyzeCholeskyWithUserOrdering(
-    cholmod_sparse* A, const vector<int>& ordering, string* message) {
+    cholmod_sparse* A, const vector<long int>& ordering, string* message) {
   CHECK_EQ(ordering.size(), A->nrow);
 
   cc_.nmethods = 1;
   cc_.method[0].ordering = CHOLMOD_GIVEN;
 
   cholmod_factor* factor =
-      cholmod_l_analyze_p(A, const_cast<int*>(&ordering[0]), nullptr, 0, &cc_);
+      cholmod_l_analyze_p(A, const_cast<long int*>(&ordering[0]), nullptr, 0, &cc_);
   if (VLOG_IS_ON(2)) {
     cholmod_l_print_common(const_cast<char*>("Symbolic Analysis"), &cc_);
   }
@@ -226,19 +226,19 @@ cholmod_factor* SuiteSparse::AnalyzeCholeskyWithNaturalOrdering(
 }
 
 bool SuiteSparse::BlockAMDOrdering(const cholmod_sparse* A,
-                                   const vector<int>& row_blocks,
-                                   const vector<int>& col_blocks,
-                                   vector<int>* ordering) {
-  const int num_row_blocks = row_blocks.size();
-  const int num_col_blocks = col_blocks.size();
+                                   const vector<long int>& row_blocks,
+                                   const vector<long int>& col_blocks,
+                                   vector<long int>* ordering) {
+  const long int num_row_blocks = row_blocks.size();
+  const long int num_col_blocks = col_blocks.size();
 
   // Arrays storing the compressed column structure of the matrix
   // incoding the block sparsity of A.
-  vector<int> block_cols;
-  vector<int> block_rows;
+  vector<long int> block_cols;
+  vector<long int> block_rows;
 
-  CompressedColumnScalarMatrixToBlockMatrix(reinterpret_cast<const int*>(A->i),
-                                            reinterpret_cast<const int*>(A->p),
+  CompressedColumnScalarMatrixToBlockMatrix(reinterpret_cast<const long int*>(A->i),
+                                            reinterpret_cast<const long int*>(A->p),
                                             row_blocks,
                                             col_blocks,
                                             &block_rows,
@@ -257,7 +257,7 @@ bool SuiteSparse::BlockAMDOrdering(const cholmod_sparse* A,
   block_matrix.sorted = 1;
   block_matrix.packed = 1;
 
-  vector<int> block_ordering(num_row_blocks);
+  vector<long int> block_ordering(num_row_blocks);
   if (!cholmod_l_amd(&block_matrix, nullptr, 0, &block_ordering[0], &cc_)) {
     return false;
   }
@@ -280,7 +280,7 @@ LinearSolverTerminationType SuiteSparse::Cholesky(cholmod_sparse* A,
   cc_.print = 0;
 
   cc_.quick_return_if_not_posdef = 1;
-  int cholmod_status = cholmod_l_factorize(A, L, &cc_);
+  long int cholmod_status = cholmod_l_factorize(A, L, &cc_);
   cc_.print = old_print_level;
 
   switch (cc_.status) {
@@ -337,12 +337,12 @@ cholmod_dense* SuiteSparse::Solve(cholmod_factor* L,
 }
 
 bool SuiteSparse::ApproximateMinimumDegreeOrdering(cholmod_sparse* matrix,
-                                                   int* ordering) {
+                                                   long int* ordering) {
   return cholmod_l_amd(matrix, nullptr, 0, ordering, &cc_);
 }
 
 bool SuiteSparse::ConstrainedApproximateMinimumDegreeOrdering(
-    cholmod_sparse* matrix, int* constraints, int* ordering) {
+    cholmod_sparse* matrix, long int* constraints, long int* ordering) {
 #ifndef CERES_NO_CAMD
   return cholmod_l_camd(matrix, nullptr, 0, constraints, ordering, &cc_);
 #else
@@ -414,7 +414,7 @@ LinearSolverTerminationType SuiteSparseCholesky::Solve(const double* rhs,
     return LINEAR_SOLVER_FATAL_ERROR;
   }
 
-  const int num_cols = factor_->n;
+  const long int num_cols = factor_->n;
   cholmod_dense cholmod_rhs = ss_.CreateDenseVectorView(rhs, num_cols);
   cholmod_dense* cholmod_dense_solution =
       ss_.Solve(factor_, &cholmod_rhs, message);

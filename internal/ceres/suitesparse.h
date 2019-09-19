@@ -102,12 +102,12 @@ class SuiteSparse {
   // Create a cholmod_dense vector around the contents of the array x.
   // This is a shallow object, which refers to the contents of x and
   // does not use the SuiteSparse machinery to allocate memory.
-  cholmod_dense CreateDenseVectorView(const double* x, int size);
+  cholmod_dense CreateDenseVectorView(const double* x, long int size);
 
   // Given a vector x, build a cholmod_dense vector of size out_size
   // with the first in_size entries copied from x. If x is NULL, then
   // an all zeros vector is returned. Caller owns the result.
-  cholmod_dense* CreateDenseVector(const double* x, int in_size, int out_size);
+  cholmod_dense* CreateDenseVector(const double* x, long int in_size, long int out_size);
 
   // The matrix A is scaled using the matrix whose diagonal is the
   // vector scale. mode describes how scaling is applied. Possible
@@ -115,7 +115,7 @@ class SuiteSparse {
   // CHOLMOD_COL for column scaling - A * diag(scale) and CHOLMOD_SYM
   // for symmetric scaling which scales both the rows and the columns
   // - diag(scale) * A * diag(scale).
-  void Scale(cholmod_dense* scale, int mode, cholmod_sparse* A) {
+  void Scale(cholmod_dense* scale, long int mode, cholmod_sparse* A) {
      cholmod_l_scale(scale, mode, A, &cc_);
   }
 
@@ -151,8 +151,8 @@ class SuiteSparse {
   cholmod_factor* AnalyzeCholesky(cholmod_sparse* A, std::string* message);
 
   cholmod_factor* BlockAnalyzeCholesky(cholmod_sparse* A,
-                                       const std::vector<int>& row_blocks,
-                                       const std::vector<int>& col_blocks,
+                                       const std::vector<long int>& row_blocks,
+                                       const std::vector<long int>& col_blocks,
                                        std::string* message);
 
   // If A is symmetric, then compute the symbolic Cholesky
@@ -168,7 +168,7 @@ class SuiteSparse {
   // Caller owns the result.
   cholmod_factor* AnalyzeCholeskyWithUserOrdering(
       cholmod_sparse* A,
-      const std::vector<int>& ordering,
+      const std::vector<long int>& ordering,
       std::string* message);
 
   // Perform a symbolic factorization of A without re-ordering A. No
@@ -220,14 +220,14 @@ class SuiteSparse {
   // A. If this is the case, only the first sum(col_blocks) are used
   // to compute the ordering.
   bool BlockAMDOrdering(const cholmod_sparse* A,
-                        const std::vector<int>& row_blocks,
-                        const std::vector<int>& col_blocks,
-                        std::vector<int>* ordering);
+                        const std::vector<long int>& row_blocks,
+                        const std::vector<long int>& col_blocks,
+                        std::vector<long int>* ordering);
 
   // Find a fill reducing approximate minimum degree
   // ordering. ordering is expected to be large enough to hold the
   // ordering.
-  bool ApproximateMinimumDegreeOrdering(cholmod_sparse* matrix, int* ordering);
+  bool ApproximateMinimumDegreeOrdering(cholmod_sparse* matrix, long int* ordering);
 
 
   // Before SuiteSparse version 4.2.0, cholmod_camd was only enabled
@@ -258,8 +258,8 @@ class SuiteSparse {
   // If CERES_NO_CAMD is defined then calling this function will
   // result in a crash.
   bool ConstrainedApproximateMinimumDegreeOrdering(cholmod_sparse* matrix,
-                                                   int* constraints,
-                                                   int* ordering);
+                                                   long int* constraints,
+                                                   long int* ordering);
 
   void Free(cholmod_sparse* m) { cholmod_l_free_sparse(&m, &cc_); }
   void Free(cholmod_dense* m)  { cholmod_l_free_dense(&m, &cc_);  }
