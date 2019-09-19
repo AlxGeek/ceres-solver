@@ -48,7 +48,11 @@ namespace internal {
 using std::string;
 using std::vector;
 
-SuiteSparse::SuiteSparse() { cholmod_l_start(&cc_); }
+SuiteSparse::SuiteSparse() { 
+  cholmod_l_start(&cc_);
+  cc_->useGPU = 1;
+  cc_->supernodal = CHOLMOD_SUPERNODAL; 
+}
 
 SuiteSparse::~SuiteSparse() { cholmod_l_finish(&cc_); }
 
